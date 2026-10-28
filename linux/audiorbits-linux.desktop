@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=AudiOrbits Linux
+Comment=Local AudiOrbits audio-reactive preview (30 FPS)
+Exec=/home/nikhil/.local/bin/audiorbits-linux
+Icon=multimedia-volume-control
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;

@@ -1,0 +1,192 @@
+# [AudiOrbits](https://steamcommunity.com/sharedfiles/filedetails/?id=1396475780)
+
+## A web wallpaper designed for [Wallpaper Engine](https://steamcommunity.com/app/431960)
+
+### IMPORTANT NOTICE
+
+You are currently viewing the **OLD** 2.3.x branch, which exists only for maintenance and bug-fixing purposes.
+
+You should generally **NOT** rely on this branch, or suggest new features here.
+
+Please use [the "main" branch](https://github.com/hexxone/audiorbits) for that.
+
+## About
+
+The wallpaper was originally made for and maintained on the Steam Workshop.
+
+However, it is basically a website and can be viewed in almost any browser.
+
+Since you need to own the Wallpaper Engine to access the Workshop content and this wallpaper, I've published this for some interested people...
+
+Feel free to use this "wallpaper" at your favourite party, event, video, stream, etc.
+Please remember to give credit by including a link to this repository or the wallpaper on Steam :) Thank you.
+
+### Usage
+
+There are several different ways to run the Wallpaper "online" or "offline".
+
+The easiest way to use it online (with internet access) is here: <https://orbits.hexx.one/>
+
+If you want to run it as a **Wallpaper for your Desktop** offline/locally, there are several different options:
+
+- [Wallpaper-Engine](https://orbits.hexx.one/) A paid App to on Steam but totally worth the price imho.
+- [Lively-Wallpaper](https://github.com/rocksdanister/lively) A free alternative to Wallpaper-Engine, but needs **SEPARATE MODIFIED VERSION** of AudiOrbits.
+
+You can find the 2.4. "Lively" Wallpaper version for download in the github releases section:
+<https://github.com/hexxone/audiorbits/releases>
+
+If you need the 2.3. "Lively" wallpaper version, you can find it as a forked repository here (may be outdated):
+<https://github.com/rocksdanister/audiorbits>
+
+Its unclear if there will be additional 2.3.X releases for Lively Wallpaper. Its too much maintenance effort tbh.
+
+Lastly, if you do not want to use it as a wallpaper BUT offline, you will need to run a small web server or configure your browser with special arguments to allow it,
+but explaining this would go beyond the scope of this README-file. In this case you will have to do your own research :)
+
+## Dependencies / Libraries
+
+- [we_utils](https://github.com/hexxone/we_utils) diverse utilities
+- [we_project_helper](https://github.com/hexxone/we_project_helper) translating & editing .json
+- [jQuery](https://jquery.com/) gui editing
+- [three.js](https://threejs.org/) & Examples for webgl rendering
+- [HTML5 Environment](https://html5test.com/) for webGL & audio features
+
+## Features
+
+Please head over to the Workshop-Page for a full list (see title for the link).
+
+## Changelog
+
+Version 2.3.1:
+
+- added 39 orbital fractlas/attractors
+- added weight slider for each of the 42 orbitals under Attractor Settings
+- added "Spiral" option under General Settings
+- changed min/max range of algorithm params
+- algorithm param E now defaults to 0
+- fixed setting no longer being updated after assigning it to null
+- Special thanks to [ssaenger](https://github.com/ssaenger) for his contribution on this update!
+
+Version 2.3:
+
+- added "shader_quality"-setting (Advanced)
+- outsourced and restructured most libraries
+- added lots of languages (see we_project_helper)
+
+Version 2.2:
+
+- fixed "no audio = screen black" issue
+- fixed rendering/zoom speed issue
+- fixed transparency for all shaders
+- fixed some LED / iCUE issues
+- added Custom Color option for Background
+- added "Only Forward Zoom" option
+- shortened animations & reload-time
+
+Version 2.1:
+
+- added blur-filter
+- added FXAA-filter
+- added "reload" indicator
+- added custom timed rendering (see further notes in Settings Guide)
+- added audio peak filter
+- added audio (neighbour) "value smoothing"
+- renamed "audio smoothing" to "time smoothing"
+- many many internal changes and fixes to improve performance
+- updated three.js and jquery
+- removed moment.js
+
+Version 2.0:
+
+- added "filter"-tab
+- added invertable mirror-filter
+- moved bloom-filter to "filter"-tab
+- moved LUT-filter to "filter"-tab
+- internal rendering & initialisation changes
+- removed "system drawing"
+
+Version 1.9:
+
+- added "minimum volume" setting
+
+Version 1.8:
+
+- added "fixed" parallax mode
+- added "color"-tab and three new color modes
+- added LUT (LookUpTable)-filter with three modes to "color"-tab
+- moved color-fade-speed to "color"-tab
+- moved bloom-filter to "color"-tab
+- level shifting is now ON by default
+- removed "no_pause"-setting (there is an equivalent option in WE)
+- updated WEWWA.js for browser usage
+- updated <https://orbits.hexx.one/>
+- updated preview image to a gif
+- improved rendering performance
+
+Version 1.7:
+
+- !!! Please reset your config for one last time !!!
+- a lot of internal changes have been made
+- default settings have been lowered
+- removed Easteregg
+- added german translation
+- added Corsair ICUE Support with 2 modes
+- added epilepsy warning (as a safety measure)
+- added WEWWA.js for Browser usage (experimental)
+- added Bloom PostProcessing shader (experimental)
+- fixed stats not being removed after reload
+- fixed background image smooth fade-in/out
+- fixed alpha-blending of textures and background images
+- overhauled audio processing & smoothing again
+- audio processing is now reusable (WEAS.js)
+- uploaded some awesome pre-configs :)
+
+Version 1.6:
+
+- added overlay & background image options
+- added default brightness & saturation options
+- added "playing audio" minimum brightness & saturation options
+- added custom font & greeting message
+- improved smooth fade-in
+- renamed "camera position" to "camera bound"
+
+Version 1.5:
+
+- grouped settings by categories
+- added fog thickness setting
+- added texture size setting
+- added alternate "rendering mode"
+- added fps settings back to wallpaper
+- rendering is now independent of fps (deltaTime calculation)
+- added a small Easteregg :)
+
+Version 1.4:
+
+- fixed screen going black due to invalid audio data
+- fixed wallpaper-engine fps limiter
+- updated render lib
+- changed orbit generation to dynamic
+- changed start rotation of subsets (0° to 45° angle)
+- increased audio zoom
+- improved smoothing
+- added 2 more choosable textures
+- added smooth fade-in when starting
+- added debug mode & logging
+- added "tunnel" effect (avoids camera blocking)
+- added level shifting (experimental)
+- removed progression
+
+Version 1.3:
+
+- audio-processing improved for different music genres
+- better smoothing, cache & performance
+- "Volume Level" wont affect "Zoom speed" anymore
+- fixed some bugs (hopefully)
+
+Version 1.2:
+
+- overhauled settings
+- added optional stats & smoothing
+- changed audio data processing
+- fixed vertex data update
+- fixed "silent"-empty bug

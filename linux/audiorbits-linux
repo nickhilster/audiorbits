@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+APP_DIR="/home/nikhil/.local/share/audiorbits-linux"
+export AUDIORBITS_FPS="${AUDIORBITS_FPS:-30}"
+export AUDIORBITS_STATS="${AUDIORBITS_STATS:-1}"
+exec /usr/bin/python3 "$APP_DIR/audiorbits_linux.py"

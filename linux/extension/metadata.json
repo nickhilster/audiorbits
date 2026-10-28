@@ -1,0 +1,7 @@
+{
+  "uuid": "audiorbits-linux@teambotics.local",
+  "name": "AudiOrbits Linux Desktop",
+  "description": "Clones the local AudiOrbits renderer into the GNOME background layer.",
+  "shell-version": ["50"],
+  "version": 1
+}

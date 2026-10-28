@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <!-- AudiOrbits main html file - One is everything and everything is one -->
+
+  <head>
+    <!-- Meta and style stuff -->
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1"
+    />
+    <title>AudiOrbits 2.3.1</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <!-- load mostly external libraries and effects -->
+    <script type="text/javascript" src="js/jquery-3.5.1.min.js"></script>
+    <script type="text/javascript" src="js/three/three.min.js"></script>
+    <script type="text/javascript" src="js/three/shader/BlurShader.js"></script>
+    <script type="text/javascript" src="js/three/shader/CopyShader.js"></script>
+    <script
+      type="text/javascript"
+      src="js/three/shader/FractalMirrorShader.js"
+    ></script>
+    <script type="text/javascript" src="js/three/shader/FXAAShader.js"></script>
+    <script
+      type="text/javascript"
+      src="js/three/shader/LuminosityHighPassShader.js"
+    ></script>
+    <script type="text/javascript" src="js/three/shader/LUTShader.js"></script>
+    <script
+      type="text/javascript"
+      src="js/three/postprocessing/EffectComposer.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="js/three/postprocessing/RenderPass.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="js/three/postprocessing/ShaderPass.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="js/three/postprocessing/UnrealBloomPass.js"
+    ></script>
+    <!-- load custom utils -->
+    <script type="text/javascript" src="we_utils/Detector.js"></script>
+    <script type="text/javascript" src="we_utils/ReloadHelper.js"></script>
+    <script type="text/javascript" src="we_utils/ShaderQuality.js"></script>
+    <script type="text/javascript" src="we_utils/Stats.js"></script>
+    <script type="text/javascript" src="we_utils/WarnHelper.js"></script>
+    <script>
+      // Local PipeWire audio feed is bridged through AudiOrbits' existing
+      // Wallpaper Engine audio listener interface.
+      window.wallpaperRegisterAudioListener = function (callback) {
+        window.audiOrbitsLinuxAudio = callback;
+      };
+    </script>
+    <script type="text/javascript" src="we_utils/weas.js"></script>
+    <script type="text/javascript" src="we_utils/weicue.js"></script>
+    <script type="text/javascript" src="we_utils/wewwa.js"></script>
+    <!-- load more custom scripts -->
+    <script type="text/javascript" src="js/audiOrbits.js"></script>
+    <script type="text/javascript" src="js/LUTSetup.js"></script>
+    <script type="text/javascript" src="js/ThreePatcher.js"></script>
+    <script>
+      // Standalone Linux entry point, keeping the upstream renderer intact.
+      (function () {
+        const query = new URLSearchParams(location.search);
+        const validFps = [30, 60, 120];
+        const initialFps = Number(query.get("fps"));
+        window.audiOrbitsLinuxTargetFps = validFps.includes(initialFps) ? initialFps : 30;
+        window.audiOrbitsLinuxRenderScale = Math.max(0.5, Math.min(1,
+          Number(query.get("scale")) || 1));
+        audiOrbits.settings.custom_fps = true;
+        audiOrbits.settings.fps_value = window.audiOrbitsLinuxTargetFps;
+
+        window.audiOrbitsLinuxFrames = 0;
+        const originalRenderLoop = audiOrbits.renderLoop;
+        audiOrbits.renderLoop = function () {
+          window.audiOrbitsLinuxFrames += 1;
+          return originalRenderLoop.apply(audiOrbits, arguments);
+        };
+
+        $(function () {
+          const stats = document.getElementById("linuxFps");
+          if (query.get("stats") === "0") stats.hidden = true;
+          let previousFrames = 0;
+          window.setInterval(function () {
+            const frames = window.audiOrbitsLinuxFrames;
+            const measured = frames - previousFrames;
+            previousFrames = frames;
+            if (stats && !stats.hidden)
+              stats.textContent = "AudiOrbits · " + measured + " FPS / " +
+                window.audiOrbitsLinuxTargetFps + " target";
+            if (measured > 0) {
+              const canvas = audiOrbits.renderer && audiOrbits.renderer.domElement;
+              const width = canvas ? canvas.width : 0;
+              const height = canvas ? canvas.height : 0;
+              fetch("/__metrics?fps=" + measured + "&target=" +
+                window.audiOrbitsLinuxTargetFps + "&width=" + width + "&height=" + height)
+                .catch(function () {});
+            }
+          }, 1000);
+
+          window.audiOrbitsLinuxSetFps = function (value) {
+            const fps = Number(value);
+            if (!validFps.includes(fps)) return;
+            window.audiOrbitsLinuxTargetFps = fps;
+            audiOrbits.settings.custom_fps = true;
+            audiOrbits.settings.fps_value = fps;
+            if (audiOrbits.state === RunState.Running)
+              audiOrbits.setRenderer(audiOrbits.renderLoop);
+          };
+
+          window.audiOrbitsLinuxSetRenderScale = function (value) {
+            const scale = Number(value);
+            if (![1, 0.75, 0.5].includes(scale)) return;
+            window.audiOrbitsLinuxRenderScale = scale;
+            if (!audiOrbits.renderer) return;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            audiOrbits.renderer.setPixelRatio(scale);
+            audiOrbits.renderer.setSize(width, height, false);
+            audiOrbits.composer.setSize(Math.round(width * scale), Math.round(height * scale));
+          };
+
+          window.audiOrbitsLinuxSetPaused = function (paused) {
+            window.wallpaperPropertyListener.setPaused(Boolean(paused));
+          };
+
+          window.audiOrbitsLinuxSetFps(window.audiOrbitsLinuxTargetFps);
+          window.audiOrbitsLinuxSetRenderScale(window.audiOrbitsLinuxRenderScale);
+
+          // Outside Wallpaper Engine no property event starts the scene.
+          window.wallpaperPropertyListener.applyUserProperties({});
+        });
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div id="linuxFps">AudiOrbits · starting…</div>
+    <img id="img_back" />
+    <div id="renderContainer">
+      <canvas id="mainCvs"></canvas>
+    </div>
+    <img id="img_over" />
+    <div id="debugwnd">
+      <h2>Debug logging active for 1 minute!</h2>
+    </div>
+    <div id="txtholder" class="polygon"></div>
+  </body>
+</html>
