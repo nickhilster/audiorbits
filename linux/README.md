@@ -14,6 +14,12 @@ loopback-only HTTP server, and supplies stereo audio spectra from PipeWire.
 - Audio source options include output monitors, microphones, and virtual inputs
   exposed by PipeWire. Changing the selected source does not change system
   routing.
+- The controls panel has a regular **Minimize** button and **Minimize to tray**.
+  The Ubuntu AppIndicator menu can restore either the controls or renderer, or
+  quit AudiOrbits. Install `gir1.2-ayatanaappindicator3-0.1` if tray mode is
+  unavailable; ordinary minimization remains usable without it.
+- **About AudiOrbits** includes a Credits tab with the Teambotics packaging
+  attribution and a link to <https://teambotics.app>.
 - The two application launchers start at 30 or 60 FPS; all three targets can be
   selected in the controls window. Press `Esc` or `q` in the preview to close.
 
@@ -39,3 +45,10 @@ code are GPL-3.0; see `audiorbits/LICENSE` and `audiorbits/we_utils/LICENSE`.
 Local modifications add standalone initialization, frame-rate and render-scale
 controls, an FPS counter, and the Python GTK/WebKit/PipeWire host. The original
 source clone in the working checkout remains unchanged.
+
+## UI checks
+
+```sh
+cd linux
+/usr/bin/python3 -m unittest test_linux_ui -v
+```

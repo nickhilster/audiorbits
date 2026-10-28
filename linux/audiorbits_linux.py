@@ -21,6 +21,12 @@ gi.require_version("WebKit2", "4.1")
 gi.require_version("Gst", "1.0")
 from gi.repository import Gdk, Gio, GLib, Gst, Gtk, WebKit2
 
+try:
+    gi.require_version("AyatanaAppIndicator3", "0.1")
+    from gi.repository import AyatanaAppIndicator3
+except (ImportError, ValueError):
+    AyatanaAppIndicator3 = None
+
 
 APP_ID = "org.teambotics.AudiOrbitsLinux"
 TITLE = "AudiOrbits Linux"
@@ -32,6 +38,62 @@ if FPS not in (30, 60, 120):
     FPS = 30
 SHOW_STATS = os.environ.get("AUDIORBITS_STATS", "1") != "0"
 RENDER_SCALE = 1.0
+
+
+def build_tray_menu(show_controls, show_renderer, quit_app):
+    """Build the AppIndicator menu used to restore the app or quit it."""
+    menu = Gtk.Menu()
+    for label, callback in (
+        ("Show Controls", show_controls),
+        ("Show Renderer", show_renderer),
+        ("Quit AudiOrbits", quit_app),
+    ):
+        item = Gtk.MenuItem(label=label)
+        item.connect("activate", callback)
+        menu.append(item)
+    menu.show_all()
+    return menu
+
+
+def create_credits_dialog(parent):
+    """Create About and Credits tabs with linked packager attribution."""
+    dialog = Gtk.Dialog(title="AudiOrbits", transient_for=parent, modal=True)
+    dialog.set_default_size(520, 300)
+    dialog.add_button("Close", Gtk.ResponseType.CLOSE)
+
+    notebook = Gtk.Notebook()
+    notebook.set_border_width(12)
+    dialog.get_content_area().pack_start(notebook, True, True, 0)
+
+    about = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+    about.set_border_width(20)
+    title = Gtk.Label()
+    title.set_markup("<big><b>AudiOrbits</b></big>")
+    about.pack_start(title, False, False, 0)
+    description = Gtk.Label(label=(
+        "A beautiful piece of software art. Thank you, hexxone, for creating it."
+    ))
+    description.set_line_wrap(True)
+    about.pack_start(description, False, False, 0)
+    version = Gtk.Label(label="Version 2.3.1 · GPL-3.0")
+    about.pack_start(version, False, False, 0)
+    author = Gtk.Label()
+    author.set_markup('Created by <a href="https://hexx.one/">hexxone</a>')
+    about.pack_start(author, False, False, 0)
+    notebook.append_page(about, Gtk.Label(label="About"))
+
+    credits = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+    credits.set_border_width(28)
+    credits.set_valign(Gtk.Align.CENTER)
+    gratitude = Gtk.Label()
+    gratitude.set_markup("Packaged with Love ❤️ &amp;🙏 Gratitude")
+    credits.pack_start(gratitude, False, False, 0)
+    packaged_by = Gtk.Label()
+    packaged_by.set_markup('by <a href="https://teambotics.app">Teambotics</a>')
+    credits.pack_start(packaged_by, False, False, 0)
+    notebook.append_page(credits, Gtk.Label(label="Credits"))
+    dialog.show_all()
+    return dialog
 
 
 @dataclass(frozen=True)
@@ -241,6 +303,8 @@ class AudiOrbitsApp(Gtk.Application):
         super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.NON_UNIQUE)
         self.window = None
         self.control_window = None
+        self.tray_indicator = None
+        self.minimize_to_tray_button = None
         self.webview = None
         self.audio = None
         self.server = None
@@ -297,6 +361,7 @@ class AudiOrbitsApp(Gtk.Application):
         self.window.connect("key-press-event", self._key_press)
 
         self._build_controls()
+        self._build_tray_indicator()
         self.control_window.set_transient_for(self.window)
         self.control_window.show_all()
         self._update_status()
@@ -317,6 +382,15 @@ class AudiOrbitsApp(Gtk.Application):
         title.set_xalign(0)
         title.get_style_context().add_class("title-2")
         root.pack_start(title, False, False, 0)
+
+        window_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        minimize_button = Gtk.Button(label="Minimize")
+        minimize_button.connect("clicked", lambda *_: self.control_window.iconify())
+        window_actions.pack_start(minimize_button, False, False, 0)
+        self.minimize_to_tray_button = Gtk.Button(label="Minimize to tray")
+        self.minimize_to_tray_button.connect("clicked", self._minimize_to_tray)
+        window_actions.pack_start(self.minimize_to_tray_button, False, False, 0)
+        root.pack_start(window_actions, False, False, 0)
 
         self.toggle_button = Gtk.Button(label="Pause")
         self.toggle_button.set_size_request(-1, 42)
@@ -385,18 +459,41 @@ class AudiOrbitsApp(Gtk.Application):
         root.pack_start(about_button, False, False, 0)
 
     def _show_about(self, _button):
-        dialog = Gtk.AboutDialog(transient_for=self.control_window, modal=True)
-        dialog.set_program_name("AudiOrbits")
-        dialog.set_version("2.3.1")
-        dialog.set_comments(
-            "A beautiful piece of software art. Thank you, hexxone, for creating it."
-        )
-        dialog.set_website("https://hexx.one/")
-        dialog.set_website_label("hexx.one")
-        dialog.set_authors(["hexxone"])
-        dialog.set_license_type(Gtk.License.GPL_3_0)
+        dialog = create_credits_dialog(self.control_window)
         dialog.run()
         dialog.destroy()
+
+    def _build_tray_indicator(self):
+        if AyatanaAppIndicator3 is None:
+            self.minimize_to_tray_button.set_sensitive(False)
+            self.minimize_to_tray_button.set_tooltip_text(
+                "Install Ubuntu's AppIndicator support to enable tray mode."
+            )
+            return
+        self.tray_indicator = AyatanaAppIndicator3.Indicator.new(
+            "audiorbits-linux", "audio-headphones-symbolic",
+            AyatanaAppIndicator3.IndicatorCategory.APPLICATION_STATUS,
+        )
+        self.tray_indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
+        self.tray_indicator.set_title("AudiOrbits")
+        self.tray_indicator.set_menu(build_tray_menu(
+            self._show_controls, self._show_renderer, lambda *_: self.quit()
+        ))
+
+    def _minimize_to_tray(self, _button):
+        if not self.tray_indicator:
+            return
+        self.control_window.hide()
+
+    def _show_controls(self, *_args):
+        if self.control_window:
+            self.control_window.show_all()
+            self.control_window.present()
+
+    def _show_renderer(self, *_args):
+        if self.window:
+            self.window.show_all()
+            self.window.present()
 
     def _loaded(self, _webview, event):
         if event == WebKit2.LoadEvent.FINISHED:
